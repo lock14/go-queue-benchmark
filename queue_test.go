@@ -26,10 +26,6 @@ var ops = []Op{
 	{Remove, 1005000},
 }
 
-func BenchmarkListQueue(b *testing.B) {
-	queueBench(&ListQueue[int]{})
-}
-
 func BenchmarkSliceQueue(b *testing.B) {
 	queueBench(&SliceQueue[int]{})
 }
