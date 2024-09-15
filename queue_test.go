@@ -2,35 +2,49 @@ package queue
 
 import (
 	"container/list"
-	"iter"
 	"testing"
 )
 
-const numVertices = 10000
+const (
+	Add    = 0
+	Remove = 1
+)
+
+type Op struct {
+	op    int
+	times int
+}
+
+var ops = []Op{
+	{Add, 50000},
+	{Remove, 25000},
+	{Add, 200000},
+	{Remove, 225000},
+	{Add, 10000},
+	{Remove, 5000},
+	{Add, 1000000},
+	{Remove, 1005000},
+}
 
 func BenchmarkListQueue(b *testing.B) {
-	queueBench(&ListQueue[int]{}, numVertices-1, &DirectedGraph{})
+	queueBench(&ListQueue[int]{})
 }
 
 func BenchmarkSliceQueue(b *testing.B) {
-	queueBench(&SliceQueue[int]{}, numVertices-1, &DirectedGraph{})
+	queueBench(&SliceQueue[int]{})
 }
 
 func BenchmarkCircularQueue(b *testing.B) {
-	queueBench(&CircularQueue[int]{}, numVertices-1, &DirectedGraph{})
+	queueBench(&CircularQueue[int]{})
 }
 
-// queueBench simulates a BFS style traversal
-func queueBench(queue Queue[int], start int, graph *DirectedGraph) {
-	seenBefore := make(map[int]struct{})
-	queue.Add(start)
-	for !queue.Empty() {
-		vertex := queue.Remove()
-
-		for neighbor := range graph.Neighbors(vertex) {
-			if _, ok := seenBefore[neighbor]; !ok {
-				seenBefore[neighbor] = struct{}{}
-				queue.Add(neighbor)
+func queueBench(queue Queue[int]) {
+	for _, p := range ops {
+		for i := 0; i < p.times; i++ {
+			if p.op == Remove {
+				_ = queue.Remove()
+			} else if p.op == Add {
+				queue.Add(0)
 			}
 		}
 	}
@@ -131,39 +145,4 @@ func (q *CircularQueue[T]) resize() {
 	q.q = s
 	q.front = 0
 	q.back = q.size
-}
-
-type DirectedGraph struct{}
-
-func (g *DirectedGraph) Vertices() iter.Seq[int] {
-	return func(yield func(int) bool) {
-		for i := 0; i < numVertices; i++ {
-			if !yield(i) {
-				break
-			}
-		}
-	}
-}
-
-func (g *DirectedGraph) Edges() iter.Seq2[int, int] {
-	return func(yield func(int, int) bool) {
-	Loop:
-		for u := range g.Vertices() {
-			for v := range g.Neighbors(u) {
-				if !yield(u, v) {
-					break Loop
-				}
-			}
-		}
-	}
-}
-
-func (g *DirectedGraph) Neighbors(v int) iter.Seq[int] {
-	return func(yield func(int) bool) {
-		for i := 0; i < v; i++ {
-			if !yield(i) {
-				break
-			}
-		}
-	}
 }
