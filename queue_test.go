@@ -98,13 +98,19 @@ func (q *CircularQueue[T]) Add(t T) {
 		q.resize()
 	}
 	q.q[q.back] = t
-	q.back = (q.back + 1) % len(q.q)
+	q.back = q.back + 1
+	if q.back == len(q.q) {
+		q.back = 0
+	}
 	q.size++
 }
 
 func (q *CircularQueue[T]) Remove() T {
 	t := q.q[q.front]
-	q.front = (q.front + 1) % len(q.q)
+	q.front = q.front + 1
+	if q.front == len(q.q) {
+		q.front = 0
+	}
 	q.size--
 	return t
 }
